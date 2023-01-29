@@ -239,8 +239,8 @@ def start(region, pages_count):
 
 
 def main():
-    pages_count = 1
-    regions = [41]
+    pages_count = 10  # Номер страницы, до которой будет производиться парсинг (макс 100)
+    regions = [41, 25]  # Номера регионов
     for region in regions:
         start(region, pages_count)
 
