@@ -80,11 +80,13 @@ def get_car_info(about):
         description = description.replace(
             '\n', ' ').replace('\r', '').replace('  ', ' ')
 
-    brand_len = len(about.get('brand'))
+    brand = about.get('brand').get('name')
+    brand_len = len(brand) or 0
+
     name = about.get('name').split(', ')[0][brand_len + 1:]
 
     new = {
-        'brand': about.get('brand'),
+        'brand': brand,
         'name': name,
         'bodyType': about.get('bodyType'),
         'color': about.get('color'),
@@ -117,7 +119,10 @@ def parse_page_response(response):
     soup = BeautifulSoup(response, 'html.parser')
     js_data = soup.find_all('script', type='application/ld+json')[1:21]
 
-    links = soup.find('div', class_='css-1nvf6xk eaczv700')
+    links = soup.find('div', class_='css-0 e1m0rp605')
+    if not links:
+        print('Bad links!')
+
     main_page_data = []
 
     for js_item, full_header, price, date_loc, link, mileage in zip(
@@ -191,11 +196,6 @@ def start(region, pages_count):
         print(f'Create {main_folder[:-1]} folder...')
         os.mkdir(main_folder)
 
-    # Создаем папку региона
-    if not os.path.exists(folder):
-        print(f'Create {folder[:-1]} folder...')
-        os.mkdir(folder)
-
     now_datetime = datetime.datetime.now()
     today_date = now_datetime.date()
     today_hour = now_datetime.hour
@@ -219,13 +219,20 @@ def start(region, pages_count):
         except:
             errors.append(responses[idx])
 
-    print(f'Errors: {len(errors)}')
+    if errors:
+        print(f'Errors: {len(errors)}')
+
     if len(result) == 0:
         print('PARSING ERROR: EMPTY CSV FILE!')
         print('PARSING ERROR: EMPTY CSV FILE!')
         print('PARSING ERROR: EMPTY CSV FILE!')
 
         return
+
+    # Создаем папку региона
+    if result and not os.path.exists(folder):
+        print(f'Create {folder[:-1]} folder...')
+        os.mkdir(folder)
 
     result_ = pd.DataFrame(result)
 
@@ -239,10 +246,20 @@ def start(region, pages_count):
 
 
 def main():
-    pages_count = 10  # Номер страницы, до которой будет производиться парсинг (макс 100)
-    regions = [41, 25]  # Номера регионов
+    pages_count = 100  # Номер страницы, до которой будет производиться парсинг (макс 100)
+    # regions = [41, 25]  # Номера регионов
+
+    regions = [i for i in range(1, 103)]
+    bad_regions = [i for i in range(80, 86)] + [i for i in range(87, 89)] + [i for i in range(90, 101)]
+
+    for bad_region in bad_regions:
+        regions.remove(bad_region)
+
     for region in regions:
-        start(region, pages_count)
+        try:
+            start(region, pages_count)
+        except:
+            print(f'{region} is Bad!')
 
 
 main()
