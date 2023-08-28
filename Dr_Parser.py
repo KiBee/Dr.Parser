@@ -33,14 +33,18 @@ fuel_list = ['бензин', 'дизель', 'гибрид', 'электро']
 def html_response(url, headers):
     for _ in range(3):
         try:
-            response = requests.get(url, headers=headers)
+            response = requests.get(url, headers=headers, timeout=3)
             return response.text
-        except ConnectionError or TimeoutError or ConnectionResetError:
-            print("\n*****ConnectionError, TimeoutError or ConnectionResetError*"
-                  "****\n\nI will retry again after 7 seconds...")
-            sleep(7)
+        # except ConnectionError or TimeoutError or ConnectionResetError:
+        except Exception:
+            tm_sec = 3
+            print(f"\n*****ConnectionError, TimeoutError or ConnectionResetError*"
+                  f"****\n\nI will retry again after {tm_sec} seconds...")
+            sleep(tm_sec)
             print('Making another request...')
 
+        # except Exception:
+        #     pass
 
 def get_date(date, today):
     """Получение даты и времени публикации"""
@@ -246,20 +250,23 @@ def start(region, pages_count):
 
 
 def main():
-    pages_count = 100  # Номер страницы, до которой будет производиться парсинг (макс 100)
-    # regions = [41, 25]  # Номера регионов
 
-    regions = [i for i in range(1, 103)]
-    bad_regions = [i for i in range(80, 86)] + [i for i in range(87, 89)] + [i for i in range(90, 101)]
+    while True:
+        pages_count = 100  # Номер страницы, до которой будет производиться парсинг (макс 100)
+        # regions = [41, 25]  # Номера регионов
 
-    for bad_region in bad_regions:
-        regions.remove(bad_region)
+        regions = [i for i in range(1, 103)]
+        bad_regions = [i for i in range(80, 86)] + [i for i in range(87, 89)] + [i for i in range(90, 101)]
 
-    for region in regions:
-        try:
-            start(region, pages_count)
-        except:
-            print(f'{region} is Bad!')
+        for bad_region in bad_regions:
+            regions.remove(bad_region)
+
+        for region in regions:
+            try:
+                start(region, pages_count)
+
+            except Exception:
+                print(f'{region} is Bad!')
 
 
 main()
